@@ -5,6 +5,7 @@ import Topics from './pages/Topics'
 import MockExams from './pages/MockExams'
 import StudySessions from './pages/StudySessions'
 import Notes from './pages/Notes'
+import NoteDetail from './pages/NoteDetail'
 import Community from './pages/Community'
 import Profile from './pages/Profile'
 import Login from './pages/Login'
@@ -14,10 +15,15 @@ import Friends from './pages/Friends'
 import Messages from './pages/Messages'
 import Notifications from './pages/Notifications'
 import StudyResources from './pages/StudyResources'
-import Videos from './pages/Videos'
+import StudyResourceDetail from './pages/StudyResourceDetail'
+import Posts from './pages/Posts'
+import MyPosts from './pages/MyPosts'
+import PostDetail from './pages/PostDetail'
+import AdminPosts from './pages/Admin/Posts'
 import AdminAnnouncements from './pages/Admin/Announcements'
 import AdminCategories from './pages/Admin/Categories'
 import { useAuthStore } from './stores/authStore'
+import GlobalTimer from './components/GlobalTimer'
 
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -35,6 +41,7 @@ function App() {
           element={
             isAuthenticated ? (
               <div className="flex h-screen overflow-hidden">
+                <GlobalTimer />
                 <Sidebar />
                 <main className="flex-1 overflow-y-auto">
                   <Routes>
@@ -44,16 +51,28 @@ function App() {
                     <Route path="/exams" element={<MockExams />} />
                     <Route path="/sessions" element={<StudySessions />} />
                     <Route path="/notes" element={<Notes />} />
+                    <Route path="/notes/:id" element={<NoteDetail />} />
                     <Route path="/community" element={<Community />} />
                     <Route path="/profile" element={<Profile />} />
 
+                    {/* New Features */}
                     {/* New Features */}
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/friends" element={<Friends />} />
                     <Route path="/messages" element={<Messages />} />
                     <Route path="/notifications" element={<Notifications />} />
+
+                    {/* Social & Posts */}
+                    <Route path="/posts" element={<Posts />} />
+                    <Route path="/posts/:id" element={<PostDetail />} />
+                    <Route path="/my-posts" element={<MyPosts />} />
+                    <Route path="/admin/posts" element={<AdminPosts />} />
+
                     <Route path="/study-resources" element={<StudyResources />} />
-                    <Route path="/videos" element={<Videos />} />
+                    <Route path="/study-resources/:id" element={<StudyResourceDetail />} />
+
+                    {/* Admin Routes */}
+                    <Route path="/admin/announcements" element={<AdminAnnouncements />} />
 
                     {/* Admin Routes */}
                     <Route path="/admin/announcements" element={<AdminAnnouncements />} />

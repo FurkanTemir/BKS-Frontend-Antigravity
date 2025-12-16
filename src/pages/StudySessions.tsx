@@ -1,43 +1,36 @@
-import { Play, Pause, RotateCcw, Clock, Loader2 } from 'lucide-react'
-import { useState, useEffect, useRef } from 'react'
+import { Play, Pause, RotateCcw, Clock, Loader2, Save, Trash2 } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
 import { studySessionService } from '../services/studySessionService'
 import { topicService } from '../services/topicService'
-import type { StudySessionDto, CreateStudySessionDto, TopicDto } from '../types'
+import { useTimerStore } from '../stores/timerStore'
+import type { StudySessionDto, TopicDto } from '../types'
 
 const StudySessions = () => {
     const [sessions, setSessions] = useState<StudySessionDto[]>([])
     const [topics, setTopics] = useState<TopicDto[]>([])
     const [isLoading, setIsLoading] = useState(true)
 
-    // Pomodoro timer state
-    const POMODORO_DURATION = 25 * 60
-    const [timeLeft, setTimeLeft] = useState(POMODORO_DURATION)
-    const [isRunning, setIsRunning] = useState(false)
-    const [currentSessionId, setCurrentSessionId] = useState<number | null>(null)
-    const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null)
-    const startTimeRef = useRef<Date | null>(null)
+    // Global Timer Store
+    const {
+        timeLeft,
+        isRunning,
+        isPaused,
+        startSession,
+        pauseSession,
+        resumeSession,
+        resetSession,
+        finishSession,
+        setTopicId,
+        selectedTopicId,
+        sessionType,
+        setSessionType,
+        plannedDuration,
+        setPlannedDuration
+    } = useTimerStore()
 
-    useEffect(() => {
-        fetchData()
-    }, [])
+    const durationOptions = [5, 15, 25, 30, 45, 60] // minutes
 
-    useEffect(() => {
-        let interval: ReturnType<typeof setInterval> | null = null
-
-        if (isRunning && timeLeft > 0) {
-            interval = setInterval(() => {
-                setTimeLeft((time) => time - 1)
-            }, 1000)
-        } else if (timeLeft === 0 && isRunning) {
-            handleStopSession()
-        }
-
-        return () => {
-            if (interval) clearInterval(interval)
-        }
-    }, [isRunning, timeLeft])
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             const [sessionsData, topicsData] = await Promise.all([
                 studySessionService.getAll(),
@@ -50,7 +43,18 @@ const StudySessions = () => {
         } finally {
             setIsLoading(false)
         }
-    }
+    }, [])
+
+    useEffect(() => {
+        fetchData()
+    }, [fetchData])
+
+    useEffect(() => {
+        console.log("Fetched Sessions:", sessions);
+        sessions.forEach(s => {
+            console.log(`Session ID: ${s.id}, TopicId: ${s.topicId}, TopicName: ${s.topicName}`);
+        });
+    }, [sessions]);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60)
@@ -64,48 +68,39 @@ const StudySessions = () => {
         return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`
     }
 
-    const handleStartSession = async () => {
+    const handleStart = async () => {
         try {
-            const data: CreateStudySessionDto = {
-                sessionType: 1, // Pomodoro
-                topicId: selectedTopicId ?? undefined,
-            }
-            const result = await studySessionService.start(data)
-            setCurrentSessionId(result.sessionId)
-            startTimeRef.current = new Date()
-            setIsRunning(true)
+            await startSession()
         } catch (err) {
-            console.error('Failed to start session:', err)
+            console.error(err)
         }
     }
 
-    const handleStopSession = async () => {
-        if (!currentSessionId || !startTimeRef.current) return
-
+    const handleFinish = async () => {
         try {
-            const durationSeconds = Math.floor((new Date().getTime() - startTimeRef.current.getTime()) / 1000)
-            await studySessionService.end({ id: currentSessionId, durationSeconds })
-            // Refresh sessions list after ending
+            await finishSession()
+            // Refresh list
             const newSessions = await studySessionService.getAll()
             setSessions(newSessions)
-            setIsRunning(false)
-            setCurrentSessionId(null)
-            startTimeRef.current = null
-            setTimeLeft(POMODORO_DURATION)
         } catch (err) {
-            console.error('Failed to end session:', err)
+            console.error(err)
         }
     }
 
-    const handleReset = () => {
-        if (isRunning && currentSessionId) {
-            handleStopSession()
+    const handleDeleteSession = async (id: number) => {
+        if (!confirm('Bu çalışma oturumu kaydını silmek istediğinize emin misiniz?')) return
+
+        try {
+            await studySessionService.delete(id)
+            setSessions(sessions.filter(s => s.id !== id))
+        } catch (err) {
+            console.error('Failed to delete session:', err)
         }
-        setTimeLeft(POMODORO_DURATION)
-        setIsRunning(false)
     }
 
-    const progress = ((POMODORO_DURATION - timeLeft) / POMODORO_DURATION) * 100
+    const progress = sessionType === 'Pomodoro'
+        ? ((plannedDuration - timeLeft) / plannedDuration) * 100
+        : 0
 
     if (isLoading) {
         return (
@@ -125,12 +120,63 @@ const StudySessions = () => {
                 <p className="text-gray-400 text-lg">Pomodoro tekniği ile verimli çalış</p>
             </header>
 
-            {/* Pomodoro Timer */}
+            {/* Timer */}
             <div className="glass-card p-12 text-center">
-                <div className="mb-8">
-                    <h2 className="text-3xl font-semibold mb-2">Pomodoro Sayacı</h2>
-                    <p className="text-gray-400">25 dakikalık odaklanmış çalışma</p>
+                {/* Timer Type Selection */}
+                <div className="flex justify-center gap-4 mb-8">
+                    <button
+                        onClick={() => !isRunning && !isPaused && setSessionType('Pomodoro')}
+                        disabled={isRunning || isPaused}
+                        className={`px-6 py-3 rounded-xl font-semibold transition-all ${sessionType === 'Pomodoro'
+                            ? 'bg-gradient-to-r from-neon-cyan to-neon-blue text-dark-400'
+                            : 'glass-card hover:bg-white/10'
+                            } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                        🍅 Pomodoro
+                    </button>
+                    <button
+                        onClick={() => !isRunning && !isPaused && setSessionType('Normal')}
+                        disabled={isRunning || isPaused}
+                        className={`px-6 py-3 rounded-xl font-semibold transition-all ${sessionType === 'Normal'
+                            ? 'bg-gradient-to-r from-neon-purple to-pink-500 text-white'
+                            : 'glass-card hover:bg-white/10'
+                            } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                        ⏱️ Normal Sayaç
+                    </button>
                 </div>
+
+                <div className="mb-8">
+                    <h2 className="text-3xl font-semibold mb-2">
+                        {sessionType === 'Pomodoro' ? 'Pomodoro Sayacı' : 'Normal Sayaç'}
+                    </h2>
+                    <p className="text-gray-400">
+                        {sessionType === 'Pomodoro'
+                            ? `${plannedDuration / 60} dakikalık odaklanmış çalışma`
+                            : 'Başlangıçtan itibaren geçen süre'}
+                    </p>
+                </div>
+
+                {/* Duration Selector for Pomodoro */}
+                {sessionType === 'Pomodoro' && !isRunning && !isPaused && (
+                    <div className="mb-8 max-w-md mx-auto">
+                        <label className="block text-sm text-gray-400 mb-2">Süre Seçin</label>
+                        <div className="grid grid-cols-3 gap-2">
+                            {durationOptions.map((mins) => (
+                                <button
+                                    key={mins}
+                                    onClick={() => setPlannedDuration(mins * 60)}
+                                    className={`px-4 py-2 rounded-lg font-semibold transition-all ${plannedDuration === mins * 60
+                                        ? 'bg-neon-cyan text-dark-400'
+                                        : 'bg-dark-300/50 hover:bg-dark-300'
+                                        }`}
+                                >
+                                    {mins} dk
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Circular Timer */}
                 <div className="relative inline-block mb-8">
@@ -172,25 +218,43 @@ const StudySessions = () => {
 
                 {/* Controls */}
                 <div className="flex items-center justify-center gap-4 mb-6">
-                    {!isRunning ? (
+                    {!isRunning && !isPaused ? (
                         <button
-                            onClick={handleStartSession}
+                            onClick={handleStart}
                             className="px-8 py-4 rounded-xl font-semibold text-lg bg-gradient-to-r from-neon-cyan to-neon-blue text-dark-400 hover:shadow-neon-cyan hover:scale-105 transition-all duration-300 flex items-center gap-2"
                         >
                             <Play size={24} />
                             Başlat
                         </button>
+                    ) : isPaused ? (
+                        <>
+                            <button
+                                onClick={resumeSession}
+                                className="px-8 py-4 rounded-xl font-semibold text-lg bg-gradient-to-r from-neon-cyan to-neon-blue text-dark-400 hover:shadow-neon-cyan hover:scale-105 transition-all duration-300 flex items-center gap-2"
+                            >
+                                <Play size={24} />
+                                Devam Et
+                            </button>
+                            <button
+                                onClick={handleFinish}
+                                className="px-8 py-4 rounded-xl font-semibold text-lg bg-gradient-to-r from-green-400 to-green-600 text-white hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2"
+                            >
+                                <Save size={24} />
+                                Kaydet
+                            </button>
+                        </>
                     ) : (
                         <button
-                            onClick={handleStopSession}
-                            className="px-8 py-4 rounded-xl font-semibold text-lg bg-gradient-to-r from-orange-500 to-red-500 text-white hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2"
+                            onClick={pauseSession}
+                            className="px-8 py-4 rounded-xl font-semibold text-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2"
                         >
                             <Pause size={24} />
-                            Durdur
+                            Duraklat
                         </button>
                     )}
+
                     <button
-                        onClick={handleReset}
+                        onClick={() => resetSession()}
                         className="px-8 py-4 rounded-xl font-semibold text-lg glass-card hover:bg-white/10 transition-all duration-300 flex items-center gap-2"
                     >
                         <RotateCcw size={24} />
@@ -203,14 +267,14 @@ const StudySessions = () => {
                     <label className="block text-sm text-gray-400 mb-2">Çalışılacak Konu (İsteğe Bağlı)</label>
                     <select
                         value={selectedTopicId ?? ''}
-                        onChange={(e) => setSelectedTopicId(e.target.value ? parseInt(e.target.value) : null)}
-                        disabled={isRunning}
+                        onChange={(e) => setTopicId(e.target.value ? parseInt(e.target.value) : null)}
+                        disabled={isRunning || isPaused}
                         className="w-full px-4 py-3 bg-dark-300/50 border-2 border-neon-cyan/30 rounded-xl text-white focus:border-neon-cyan focus:outline-none transition-all disabled:opacity-50"
                     >
                         <option value="">Konu seçiniz...</option>
                         {topics.map((topic) => (
                             <option key={topic.id} value={topic.id}>
-                                {topic.subjectName} - {topic.name}
+                                {topic.lesson} - {topic.name}
                             </option>
                         ))}
                     </select>
@@ -218,7 +282,7 @@ const StudySessions = () => {
             </div>
 
             {/* Weekly Stats */}
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-4 gap-6">
                 <div className="glass-card p-6 text-center">
                     <Clock className="text-neon-cyan mx-auto mb-3" size={32} />
                     <p className="text-4xl font-bold text-neon-cyan">
@@ -234,8 +298,15 @@ const StudySessions = () => {
                     <p className="text-sm text-gray-400 mt-2">Pomodoro</p>
                 </div>
                 <div className="glass-card p-6 text-center">
+                    <div className="text-4xl mb-3">⏱️</div>
+                    <p className="text-4xl font-bold text-neon-purple">
+                        {sessions.filter(s => s.sessionType === 'Normal').length}
+                    </p>
+                    <p className="text-sm text-gray-400 mt-2">Normal Sayaç</p>
+                </div>
+                <div className="glass-card p-6 text-center">
                     <div className="text-4xl mb-3">📚</div>
-                    <p className="text-4xl font-bold text-neon-purple">{sessions.length}</p>
+                    <p className="text-4xl font-bold text-green-400">{sessions.length}</p>
                     <p className="text-sm text-gray-400 mt-2">Toplam Oturum</p>
                 </div>
             </div>
@@ -250,14 +321,14 @@ const StudySessions = () => {
                         sessions.slice(0, 10).map((session) => (
                             <div
                                 key={session.id}
-                                className="flex items-center justify-between p-4 bg-dark-300/30 rounded-lg hover:bg-dark-300/50 transition-colors"
+                                className="flex items-center justify-between p-4 bg-dark-300/30 rounded-lg hover:bg-dark-300/50 transition-colors relative group pr-16"
                             >
                                 <div className="flex items-center gap-4">
                                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${session.sessionType === 'Pomodoro'
                                         ? 'bg-gradient-to-br from-neon-cyan to-neon-blue'
                                         : 'bg-gradient-to-br from-neon-purple to-pink-500'
                                         }`}>
-                                        <Clock size={24} className="text-dark-400" />
+                                        <span className="text-2xl">{session.sessionType === 'Pomodoro' ? '🍅' : '⏱️'}</span>
                                     </div>
                                     <div>
                                         <p className="font-semibold">{session.topicName || 'Genel Çalışma'}</p>
@@ -270,6 +341,14 @@ const StudySessions = () => {
                                     <p className="text-2xl font-bold text-neon-cyan">{formatDuration(session.durationSeconds)}</p>
                                     <p className="text-xs text-gray-400">Süre</p>
                                 </div>
+
+                                <button
+                                    onClick={() => handleDeleteSession(session.id)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 bg-dark-200 shadow-lg hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded-lg transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
+                                    title="Sil"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
                             </div>
                         ))
                     )}

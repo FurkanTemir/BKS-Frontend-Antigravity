@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { friendshipService } from '../services/friendshipService'
 import { messageService } from '../services/messageService'
 import type { FriendDto, MessageDto } from '../types'
-import { Send, Search, MoreVertical, Phone, Video, MessageCircle } from 'lucide-react'
+import { Send, Search, MessageCircle } from 'lucide-react'
 
 export default function Messages() {
     const [searchParams] = useSearchParams()
@@ -113,9 +113,15 @@ export default function Messages() {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-baseline">
                                         <h3 className="font-medium text-white truncate">{friend.firstName} {friend.lastName}</h3>
-                                        <span className="text-xs text-gray-500">12:30</span>
+                                        {friend.lastMessageDate && (
+                                            <span className="text-xs text-gray-500">
+                                                {new Date(friend.lastMessageDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        )}
                                     </div>
-                                    <p className="text-xs text-gray-400 truncate">Son mesaj içeriği buraya...</p>
+                                    <p className="text-xs text-gray-400 truncate">
+                                        {friend.lastMessage || 'Henüz mesaj yok...'}
+                                    </p>
                                 </div>
                             </div>
                         ))
@@ -135,16 +141,14 @@ export default function Messages() {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-white">{selectedFriend.firstName} {selectedFriend.lastName}</h3>
-                                    <div className="flex items-center gap-1 text-xs text-emerald-400">
-                                        <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                                        Çevrimiçi
+                                    <div className={`flex items-center gap-1 text-xs ${selectedFriend.isOnline ? 'text-emerald-400' : 'text-gray-400'}`}>
+                                        <div className={`w-2 h-2 rounded-full ${selectedFriend.isOnline ? 'bg-emerald-400' : 'bg-gray-400'}`} />
+                                        {selectedFriend.isOnline ? 'Çevrimiçi' : 'Çevrimdışı'}
                                     </div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-4 text-gray-400">
-                                <button className="hover:text-white transition-colors"><Phone className="w-5 h-5" /></button>
-                                <button className="hover:text-white transition-colors"><Video className="w-5 h-5" /></button>
-                                <button className="hover:text-white transition-colors"><MoreVertical className="w-5 h-5" /></button>
+                                {/* Buttons removed */}
                             </div>
                         </div>
 
@@ -167,7 +171,7 @@ export default function Messages() {
                                                 }`}>
                                                 <p>{msg.content}</p>
                                                 <div className={`text-[10px] mt-1 text-right ${isMe ? 'text-pink-200' : 'text-gray-500'}`}>
-                                                    {new Date(msg.sentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    {new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </div>
                                             </div>
                                         </div>
@@ -204,6 +208,6 @@ export default function Messages() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     )
 }

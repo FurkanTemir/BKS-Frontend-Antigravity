@@ -112,6 +112,30 @@ export interface CreateNoteDto {
 }
 
 // Community Types
+// Video DTOs
+export interface VideoDto {
+    id: number
+    fileName: string
+    publicUrl: string
+    fileSizeBytes: number
+    durationSeconds: number
+    createdDate: string
+}
+
+export interface GenerateUploadUrlRequest {
+    fileName: string
+    contentType: string
+    fileSizeBytes: number
+}
+
+export interface PresignedUploadUrlDto {
+    uploadUrl: string
+    videoId: number
+    r2Key: string
+    publicUrl: string
+    expiresAt: string
+}
+
 export interface PostDto {
     id: number
     userId: number
@@ -123,19 +147,23 @@ export interface PostDto {
     contentType: number
     content: string
     imageUrl?: string
+    video?: VideoDto
     createdDate: string
     viewCount: number
     likeCount: number
     commentCount: number
     isLikedByMe: boolean
     isApproved: boolean
+    rejectionReason?: string
 }
 
 export interface CreatePostDto {
     topicId: number
     contentType: number
     content: string
+    imageFile?: File | null
     imageUrl?: string
+    videoId?: number
 }
 
 export interface CommentDto {
@@ -144,11 +172,14 @@ export interface CommentDto {
     userName: string
     content: string
     createdDate: string
+    parentId?: number
+    replies?: CommentDto[]
 }
 
 export interface CreateCommentDto {
     postId: number
     content: string
+    parentId?: number
 }
 
 export interface LeaderboardEntryDto {
@@ -163,22 +194,27 @@ export interface LeaderboardEntryDto {
 }
 
 // Gamification Types
+export interface UserStreakDto {
+    currentStreak: number
+    maxStreak: number
+    lastActivityDate: string
+}
+
 export interface BadgeDto {
     id: number
     name: string
     description: string
     iconUrl: string
-    earnedDate: string
+    conditionType: string
+    targetValue: number
+    isEarned: boolean
+    earnedDate?: string
 }
 
 export interface GamificationProfileDto {
-    userId: number
-    currentStreak: number
-    longestStreak: number
-    totalStudyMinutes: number
-    level: number
-    points: number
+    streak: UserStreakDto
     badges: BadgeDto[]
+    totalPoints: number
 }
 
 // Friendship Types
@@ -191,6 +227,8 @@ export interface FriendDto {
     level: number
     isOnline: boolean
     friendCode: string
+    lastMessage?: string
+    lastMessageDate?: string
 }
 
 export interface FriendRequestDto {
@@ -205,7 +243,7 @@ export interface MessageDto {
     senderId: number
     receiverId: number
     content: string;
-    sentDate: string;
+    sentAt: string;
     isRead: boolean;
 }
 
@@ -242,10 +280,10 @@ export interface NotificationMessageDto {
 export interface StudyResourceDto {
     id: number
     name: string
-    type: string // Book, QuestionBank, Video, etc.
+    resourceType: string // Book, QuestionBank, Video, etc. from backend enum to string
     topicId?: number
     topicName?: string
-    url?: string
+    linkOrInfo?: string
     totalQuestions?: number
     solvedQuestions?: number
     isCompleted: boolean
@@ -253,11 +291,24 @@ export interface StudyResourceDto {
 }
 
 export interface CreateStudyResourceDto {
-    name: string
-    type: string
-    topicId?: number
-    url?: string
-    totalQuestions?: number
+    Name: string
+    ResourceType: number
+    LinkOrInfo?: string
+    TopicId?: number
+    TotalQuestions?: number
+    SolvedQuestionCount?: number
+}
+
+// Optional: You might want to update UpdateStudyResourceDto too if used
+export interface UpdateStudyResourceDto {
+    Id: number
+    Name: string
+    ResourceType: number
+    LinkOrInfo?: string
+    TopicId?: number
+    SolvedQuestionCount?: number
+    TotalQuestions?: number
+    Notes?: string
 }
 
 // Video Types
@@ -283,7 +334,7 @@ export interface GenerateUploadUrlRequest {
 // Analytics Types
 export interface HeatmapData {
     date: string
-    count: number // intensity/minutes
+    totalSeconds: number
 }
 
 export interface TimeWastedData {
@@ -295,8 +346,9 @@ export interface TimeWastedData {
 
 export interface StudyTimeChartData {
     date: string
-    minutes: number
-    subjectBreakdown: { [key: string]: number }
+    totalSeconds: number
+    pomodoroSeconds: number
+    normalSeconds: number
 }
 
 export interface ComprehensiveAnalysisDto {
@@ -306,6 +358,16 @@ export interface ComprehensiveAnalysisDto {
     mostStudiedSubject: string
     heatmap: HeatmapData[]
     weeklyChart: StudyTimeChartData[]
+    recentActivities: StudyActivityDto[]
+}
+
+export interface StudyActivityDto {
+    id: number
+    title: string
+    description: string
+    date: string
+    duration: string
+    color: string
 }
 
 // Export & Undo Types
@@ -394,12 +456,55 @@ export interface ChangePasswordRequest {
 }
 
 // Dashboard Types
-export interface DashboardSummary {
-    totalStudyMinutes: number
-    weeklyStudyMinutes: number
-    streak: number
-    completedTopics: number
-    totalTopics: number
-    lastMockExamNet?: number
-    weeklyProgress: number[]
+export interface DashboardStudyTimeSummary {
+    todayMinutes: number
+    thisWeekMinutes: number
+    thisMonthMinutes: number
+    totalMinutes: number
+    pomodoroCount: number
+    normalSessionCount: number
 }
+
+export interface DashboardMockExamSummary {
+    totalExams: number
+    tytCount: number
+    aytCount: number
+    averageNet?: number
+    lastExamNet?: number
+    lastExamDate?: string
+}
+
+export interface DashboardTopicProgressSummary {
+    totalTopics: number
+    completedTopics: number
+    remainingTopics: number
+    completionPercentage: number
+    tytCompleted: number
+    tytRemaining: number
+    aytCompleted: number
+    aytRemaining: number
+}
+
+export interface DailyGoals {
+    plannedStudyMinutes: number
+    actualStudyMinutes: number
+    plannedTopicsCount: number
+    completedTopicsCount: number
+    hasActivePlan: boolean
+}
+
+export interface Activity {
+    type: string
+    description: string
+    date: string
+}
+
+export interface DashboardSummary {
+    studyTime: DashboardStudyTimeSummary
+    mockExam: DashboardMockExamSummary
+    topicProgress: DashboardTopicProgressSummary
+    dailyGoals: DailyGoals
+    recentActivities: Activity[]
+}
+
+

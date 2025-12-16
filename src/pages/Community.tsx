@@ -1,9 +1,12 @@
-import { Heart, Loader2, MessageSquare, Share2, Trophy, User, Users } from 'lucide-react'
+import { Trophy, User, Users } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import PostCard from '../components/PostCard'
 import { postService, leaderboardService } from '../services/communityService'
 import type { PostDto, LeaderboardEntryDto } from '../types'
 
 const Community = () => {
+    const navigate = useNavigate()
     const [activeTab, setActiveTab] = useState<'feed' | 'leaderboard'>('feed')
     const [posts, setPosts] = useState<PostDto[]>([])
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntryDto[]>([])
@@ -95,8 +98,10 @@ const Community = () => {
             </div>
 
             {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-neon-cyan" />
+                <div className="space-y-6 max-w-3xl mx-auto">
+                    {[1, 2, 3].map((i) => (
+                        <PostCard key={i} isLoading={true} />
+                    ))}
                 </div>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -110,49 +115,23 @@ const Community = () => {
                                     </div>
                                 ) : (
                                     posts.map((post) => (
-                                        <div key={post.id} className="glass-card p-6">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-neon-purple to-blue-500 flex items-center justify-center text-white font-bold">
-                                                        {post.userName.charAt(0)}
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="font-semibold text-white">{post.userName}</h3>
-                                                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                                                            <span>{new Date(post.createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                                            <span>•</span>
-                                                            <span className="text-neon-blue">{post.userRole}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="px-3 py-1 bg-white/5 rounded-full text-xs text-gray-300 border border-white/10">
-                                                    {post.topicName}
-                                                </div>
-                                            </div>
-
-                                            <p className="text-gray-200 mb-6 leading-relaxed">{post.content}</p>
-
-                                            {post.imageUrl && (
-                                                <img src={post.imageUrl} alt="" className="w-full rounded-xl mb-4" />
-                                            )}
-
-                                            <div className="flex items-center gap-6 pt-4 border-t border-white/5">
-                                                <button
-                                                    onClick={() => handleLike(post.id, post.isLikedByMe)}
-                                                    className={`flex items-center gap-2 transition-colors ${post.isLikedByMe ? 'text-red-500' : 'text-gray-400 hover:text-red-500'}`}
-                                                >
-                                                    <Heart size={20} fill={post.isLikedByMe ? 'currentColor' : 'none'} />
-                                                    <span className="text-sm font-medium">{post.likeCount}</span>
-                                                </button>
-                                                <button className="flex items-center gap-2 text-gray-400 hover:text-neon-blue transition-colors">
-                                                    <MessageSquare size={20} />
-                                                    <span className="text-sm font-medium">Yorum</span>
-                                                </button>
-                                                <button className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors ml-auto">
-                                                    <Share2 size={20} />
-                                                </button>
-                                            </div>
-                                        </div>
+                                        <PostCard
+                                            key={post.id}
+                                            post={post}
+                                            onClick={() => navigate(`/app/posts/${post.id}`)}
+                                            onLike={(e) => {
+                                                e.stopPropagation()
+                                                handleLike(post.id, post.isLikedByMe)
+                                            }}
+                                            onComment={(e) => {
+                                                e.stopPropagation()
+                                                navigate(`/app/posts/${post.id}`)
+                                            }}
+                                            onShare={(e) => {
+                                                e.stopPropagation()
+                                                // Share functionality
+                                            }}
+                                        />
                                     ))
                                 )}
                             </>

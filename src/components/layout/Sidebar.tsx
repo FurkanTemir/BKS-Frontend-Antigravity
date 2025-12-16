@@ -1,4 +1,4 @@
-import { Home, Target, BookOpen, Clock, FileText, Users, User, LogOut, BarChart2, MessageCircle, Bell, Video, Library, Settings } from 'lucide-react'
+import { Home, Target, BookOpen, Clock, FileText, Users, User, LogOut, BarChart2, MessageCircle, Bell, Library, Shield } from 'lucide-react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/authStore'
 
@@ -14,12 +14,13 @@ const Sidebar = () => {
         { icon: Clock, label: 'Focus', path: '/app/sessions' },
         { icon: FileText, label: 'Notlar', path: '/app/notes' },
         { icon: Library, label: 'Kaynaklar', path: '/app/study-resources' },
-        { icon: Video, label: 'Videolar', path: '/app/videos' },
-        { icon: Users, label: 'Arkadaşlar', path: '/app/friends' },
+        { icon: Users, label: 'Paylaşımlar', path: '/app/posts' },
+        { icon: User, label: 'Benim Paylaşımlarım', path: '/app/my-posts' },
         { icon: MessageCircle, label: 'Mesajlar', path: '/app/messages' },
+        { icon: Users, label: 'Arkadaşlar', path: '/app/friends' },
         { icon: Bell, label: 'Bildirimler', path: '/app/notifications' },
-        // { icon: Users, label: 'Topluluk', path: '/app/community' }, // Keeping original Community if needed, or merging with Friends? Let's keep both for now as Community is 'Posts'
         { icon: User, label: 'Profil', path: '/app/profile' },
+        { icon: Shield, label: 'Admin Onay', path: '/app/admin/posts' },
     ]
 
     const handleLogout = () => {

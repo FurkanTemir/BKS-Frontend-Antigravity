@@ -24,4 +24,8 @@ export const studySessionService = {
         const response = await api.get('/StudySession/stats/weekly')
         return response.data
     },
+
+    delete: async (id: number): Promise<void> => {
+        await api.delete(`/StudySession/${id}`)
+    },
 }

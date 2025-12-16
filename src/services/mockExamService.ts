@@ -18,7 +18,7 @@ export const mockExamService = {
     },
 
     update: async (id: number, data: CreateMockExamDto): Promise<MockExamDto> => {
-        const response = await api.put<MockExamDto>(`/MockExam/${id}`, data)
+        const response = await api.put<MockExamDto>('/MockExam', { ...data, id })
         return response.data
     },
 
