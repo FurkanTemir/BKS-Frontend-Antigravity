@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { postService } from '../services/postService'
 import type { PostDto } from '../types'
-import { Loader2, Clock, CheckCircle, XCircle, AlertCircle, Pencil, X, Save } from 'lucide-react'
+import { Loader2, Clock, CheckCircle, XCircle, AlertCircle, Pencil, X, Save, FileQuestion, Plus } from 'lucide-react'
+import PostCard from '../components/Posts/PostCard'
 
 const MyPosts = () => {
     const navigate = useNavigate()
@@ -60,125 +61,120 @@ const MyPosts = () => {
     })
 
     return (
-        <div className="p-8 space-y-8 animate-in fade-in duration-500">
-            <header>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    Benim Paylaşımlarım
-                </h1>
-                <p className="text-gray-400 mt-2">Paylaşımlarının durumunu buradan takip edebilirsin.</p>
+        <div className="p-8 space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                        Benim Paylaşımlarım
+                    </h1>
+                    <p className="text-gray-400 mt-2">Paylaşımlarının durumunu buradan takip edebilirsin.</p>
+                </div>
+                <button
+                    onClick={() => navigate('/app/posts')} // Assuming main posts page or create modal trigger
+                    className="flex items-center gap-2 px-6 py-3 rounded-full bg-neon-blue text-black font-bold hover:bg-blue-400 hover:scale-105 transition-all shadow-lg shadow-neon-blue/20"
+                >
+                    <Plus size={20} />
+                    Yeni Paylaşım
+                </button>
             </header>
 
             {/* Tabs */}
-            <div className="flex gap-4 border-b border-white/10">
+            <div className="flex gap-2 p-1 rounded-xl bg-white/5 border border-white/5 w-fit">
                 <button
                     onClick={() => setActiveTab('approved')}
-                    className={`pb-3 px-4 text-sm font-medium transition-colors relative ${activeTab === 'approved' ? 'text-emerald-400' : 'text-gray-400 hover:text-white'}`}
+                    className={`
+                        px-6 py-2 rounded-lg text-sm font-medium transition-all duration-300
+                        flex items-center gap-2
+                        ${activeTab === 'approved'
+                            ? 'bg-emerald-500/20 text-emerald-400 shadow-lg shadow-emerald-500/10'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }
+                    `}
                 >
-                    <div className="flex items-center gap-2">
-                        <CheckCircle size={16} />
-                        Onaylananlar
-                    </div>
-                    {activeTab === 'approved' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-400" />}
+                    <CheckCircle size={16} />
+                    Onaylananlar
                 </button>
                 <button
                     onClick={() => setActiveTab('pending')}
-                    className={`pb-3 px-4 text-sm font-medium transition-colors relative ${activeTab === 'pending' ? 'text-yellow-400' : 'text-gray-400 hover:text-white'}`}
+                    className={`
+                        px-6 py-2 rounded-lg text-sm font-medium transition-all duration-300
+                        flex items-center gap-2
+                        ${activeTab === 'pending'
+                            ? 'bg-amber-500/20 text-amber-400 shadow-lg shadow-amber-500/10'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }
+                    `}
                 >
-                    <div className="flex items-center gap-2">
-                        <Clock size={16} />
-                        Onay Bekleyenler
-                    </div>
-                    {activeTab === 'pending' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-yellow-400" />}
+                    <Clock size={16} />
+                    Onay Bekleyenler
                 </button>
                 <button
                     onClick={() => setActiveTab('rejected')}
-                    className={`pb-3 px-4 text-sm font-medium transition-colors relative ${activeTab === 'rejected' ? 'text-red-400' : 'text-gray-400 hover:text-white'}`}
+                    className={`
+                        px-6 py-2 rounded-lg text-sm font-medium transition-all duration-300
+                        flex items-center gap-2
+                        ${activeTab === 'rejected'
+                            ? 'bg-red-500/20 text-red-400 shadow-lg shadow-red-500/10'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }
+                    `}
                 >
-                    <div className="flex items-center gap-2">
-                        <XCircle size={16} />
-                        Reddedilenler
-                    </div>
-                    {activeTab === 'rejected' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-red-400" />}
+                    <XCircle size={16} />
+                    Reddedilenler
                 </button>
             </div>
 
             {/* List */}
             {isLoading ? (
-                <div className="flex justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+                <div className="flex justify-center py-20">
+                    <Loader2 className="w-10 h-10 animate-spin text-purple-400" />
                 </div>
             ) : (
-                <div className="space-y-4">
+                <div className="min-h-[400px]">
                     {filteredPosts.length === 0 ? (
-                        <div className="glass-panel p-8 text-center text-gray-500">
-                            Bu kategoride paylaşım bulunmuyor.
+                        <div className="flex flex-col items-center justify-center py-20 text-center animate-in zoom-in-95 duration-500">
+                            <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-6">
+                                <FileQuestion className="w-12 h-12 text-gray-500" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-2">
+                                Henüz paylaşım bulunamadı
+                            </h3>
+                            <p className="text-gray-400 max-w-sm mb-8">
+                                Bu kategoride henüz bir paylaşımın yok. Fikirlerini toplulukla paylaşmaya ne dersin?
+                            </p>
+                            <button
+                                onClick={() => navigate('/app/posts')}
+                                className="px-8 py-3 rounded-full border border-white/10 hover:bg-white/5 transition-all text-white font-medium flex items-center gap-2"
+                            >
+                                <Plus size={18} />
+                                Paylaşım Oluştur
+                            </button>
                         </div>
                     ) : (
-                        filteredPosts.map(post => (
-                            <div
-                                key={post.id}
-                                onClick={() => navigate('/app/posts/' + post.id)}
-                                className="glass-panel p-6 rounded-xl border border-white/5 bg-white/5 space-y-4 cursor-pointer hover:bg-white/10 transition-colors relative group"
-                            >
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="px-2 py-1 rounded-full bg-white/10 text-xs text-gray-300 border border-white/10">
-                                                {post.topicName}
-                                            </span>
-                                            <span className="text-xs text-gray-500">
-                                                {new Date(post.createdDate).toLocaleDateString()}
-                                            </span>
-                                        </div>
-                                        <p className="text-white line-clamp-2">{post.content}</p>
-                                    </div>
-
-                                    <div className="flex items-start gap-2">
-                                        {activeTab === 'pending' && (
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    setEditingPost(post)
-                                                    setEditContent(post.content)
-                                                }}
-                                                className="p-2 rounded-lg bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 transition-colors"
-                                                title="Düzenle"
-                                            >
-                                                <Pencil size={18} />
-                                            </button>
-                                        )}
-
-                                        {activeTab === 'rejected' && (
-                                            <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 max-w-md">
-                                                <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                                                <div>
-                                                    <div className="text-sm font-medium text-red-400">Red Sebebi</div>
-                                                    <div className="text-sm text-red-300/80">{post.rejectionReason}</div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                        <div className="space-y-6">
+                            {filteredPosts.map(post => (
+                                <div key={post.id} onClick={() => navigate('/app/posts/' + post.id)} className="cursor-pointer">
+                                    <PostCard
+                                        post={post}
+                                        onEdit={(post) => {
+                                            setEditingPost(post)
+                                            setEditContent(post.content)
+                                        }}
+                                    />
                                 </div>
-
-                                {activeTab === 'approved' && (
-                                    <div className="flex items-center gap-4 text-sm text-gray-400 pt-4 border-t border-white/5">
-                                        <span>{post.likeCount} Beğeni</span>
-                                        <span>{post.commentCount} Yorum</span>
-                                        <span>{post.viewCount} Görüntülenme</span>
-                                    </div>
-                                )}
-                            </div>
-                        ))
+                            ))}
+                        </div>
                     )}
                 </div>
             )}
+
             {/* Edit Modal */}
             {editingPost && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-dark-300 rounded-2xl w-full max-w-lg border border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+                    <div className="bg-[#1a1c1e] rounded-2xl w-full max-w-lg border border-gray-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-4 border-b border-white/5 flex justify-between items-center bg-white/5">
                             <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                <Pencil size={18} className="text-yellow-400" />
+                                <Pencil size={18} className="text-amber-400" />
                                 Gönderiyi Düzenle
                             </h3>
                             <button
@@ -195,31 +191,31 @@ const MyPosts = () => {
                                 <textarea
                                     value={editContent}
                                     onChange={(e) => setEditContent(e.target.value)}
-                                    className="w-full h-32 bg-dark-400 text-white rounded-xl p-4 border border-white/10 focus:border-neon-blue focus:ring-1 focus:ring-neon-blue outline-none resize-none"
+                                    className="w-full h-32 bg-[#0f1112] text-white rounded-xl p-4 border border-white/10 focus:border-neon-blue focus:ring-1 focus:ring-neon-blue outline-none resize-none placeholder-gray-600"
                                     placeholder="İçeriğinizi düzenleyin..."
                                 />
                             </div>
 
                             {/* Warning about re-approval */}
-                            <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex gap-3">
-                                <AlertCircle className="w-5 h-5 text-yellow-400 shrink-0" />
-                                <p className="text-sm text-yellow-200/80">
-                                    Düzenleme yapıldığında gönderiniz tekrar onay sürecine girecektir.
+                            <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10 flex gap-3">
+                                <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
+                                <p className="text-sm text-amber-200/80 leading-relaxed">
+                                    Düzenleme yapıldığında gönderiniz tekrar <span className="text-amber-400 font-bold">onay sürecine</span> girecektir.
                                 </p>
                             </div>
                         </div>
 
-                        <div className="p-4 border-t border-white/10 bg-white/5 flex justify-end gap-3">
+                        <div className="p-4 border-t border-white/5 bg-white/5 flex justify-end gap-3">
                             <button
                                 onClick={() => setEditingPost(null)}
-                                className="px-4 py-2 rounded-xl text-gray-300 hover:bg-white/5 transition-colors"
+                                className="px-4 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors font-medium"
                             >
                                 İptal
                             </button>
                             <button
                                 onClick={handleUpdate}
                                 disabled={!editContent.trim() || isEditSubmitting}
-                                className="px-6 py-2 rounded-xl bg-neon-blue text-black font-bold hover:bg-blue-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+                                className="px-6 py-2 rounded-xl bg-neon-blue text-black font-bold hover:bg-blue-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all shadow-lg shadow-neon-blue/20"
                             >
                                 {isEditSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save size={18} />}
                                 Kaydet

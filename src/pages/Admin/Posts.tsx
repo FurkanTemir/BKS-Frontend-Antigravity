@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react'
 import { postService } from '../../services/postService'
 import type { PostDto } from '../../types'
-import { Loader2, Check, X } from 'lucide-react'
+import { Loader2, Check } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import AdminApprovalCard from '../../components/Admin/AdminApprovalCard'
+import RejectionModal from '../../components/Admin/RejectionModal'
+import { useNavigate } from 'react-router-dom'
 
 const AdminPosts = () => {
     const [posts, setPosts] = useState<PostDto[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [processingId, setProcessingId] = useState<number | null>(null)
+    const [rejectionModalPostId, setRejectionModalPostId] = useState<number | null>(null)
+    const navigate = useNavigate()
 
     useEffect(() => {
         fetchPending()
@@ -25,11 +31,13 @@ const AdminPosts = () => {
     }
 
     const handleApprove = async (id: number) => {
+        // Optional: Add simple confirmation or just instant action with toast (keeping it snappy as requested)
         if (!confirm('Bu gönderiyi onaylıyor musunuz?')) return
+
         setProcessingId(id)
         try {
             await postService.approve(id)
-            setPosts(posts.filter(p => p.id !== id))
+            setPosts(prev => prev.filter(p => p.id !== id))
         } catch (err) {
             console.error(err)
             alert('İşlem başarısız.')
@@ -38,14 +46,18 @@ const AdminPosts = () => {
         }
     }
 
-    const handleReject = async (id: number) => {
-        const reason = prompt('Red sebebini giriniz:')
-        if (!reason) return
+    const initReject = (id: number) => {
+        setRejectionModalPostId(id)
+    }
 
-        setProcessingId(id)
+    const handleConfirmReject = async (reason: string) => {
+        if (!rejectionModalPostId) return
+
+        setProcessingId(rejectionModalPostId)
         try {
-            await postService.reject(id, reason)
-            setPosts(posts.filter(p => p.id !== id))
+            await postService.reject(rejectionModalPostId, reason)
+            setPosts(prev => prev.filter(p => p.id !== rejectionModalPostId))
+            setRejectionModalPostId(null)
         } catch (err) {
             console.error(err)
             alert('İşlem başarısız.')
@@ -55,94 +67,70 @@ const AdminPosts = () => {
     }
 
     return (
-        <div className="p-8 space-y-8 animate-in fade-in duration-500">
-            <header className="flex items-center justify-between">
+        <div className="min-h-screen p-6 md:p-12 space-y-10 animate-in fade-in duration-500">
+
+            {/* Page Header */}
+            <div className="max-w-5xl mx-auto flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-white">Onay Bekleyen Gönderiler</h1>
-                    <p className="text-gray-400 mt-2">İncelenmesi gereken {posts.length} yeni gönderi var.</p>
+                    <h1 className="text-4xl font-black text-white tracking-tight">Onay Merkezi</h1>
+                    <p className="text-gray-400 mt-2 text-lg">
+                        İncelenmeyi bekleyen <span className="text-neon-cyan font-bold">{posts.length}</span> gönderi var.
+                    </p>
                 </div>
-                <button onClick={fetchPending} className="px-4 py-2 bg-white/5 rounded-lg hover:bg-white/10 text-sm">Yenile</button>
-            </header>
+                <button
+                    onClick={fetchPending}
+                    className="px-5 py-2.5 bg-white/5 rounded-xl hover:bg-white/10 text-sm font-medium transition-colors border border-white/5"
+                >
+                    Listeyi Yenile
+                </button>
+            </div>
 
-            {isLoading ? (
-                <div className="flex justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-neon-blue" />
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 gap-6">
-                    {posts.length === 0 ? (
-                        <div className="p-12 text-center text-gray-500 border border-white/5 rounded-2xl bg-white/5">
-                            <Check className="w-12 h-12 mx-auto mb-4 text-emerald-500 opacity-50" />
-                            <h3 className="text-xl font-medium text-white">Her şey yolunda!</h3>
-                            <p>Onay bekleyen gönderi bulunmuyor.</p>
-                        </div>
-                    ) : (
-                        posts.map(post => (
-                            <div key={post.id} className="glass-panel p-6 rounded-xl border border-white/5 bg-white/5 flex gap-6">
-                                {/* User Info */}
-                                <div className="shrink-0 text-center space-y-2 w-32 border-r border-white/5 pr-6">
-                                    <div className="w-12 h-12 mx-auto rounded-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center text-white font-bold text-lg">
-                                        {post.userName.charAt(0)}
+            {/* Content Area */}
+            <div className="max-w-5xl mx-auto">
+                {isLoading ? (
+                    <div className="flex flex-col items-center justify-center py-24 space-y-4">
+                        <Loader2 className="w-12 h-12 animate-spin text-neon-cyan" />
+                        <p className="text-gray-500 animate-pulse">Veriler yükleniyor...</p>
+                    </div>
+                ) : (
+                    <div className="space-y-8">
+                        <AnimatePresence mode="popLayout">
+                            {posts.length === 0 ? (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="py-24 text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.02]"
+                                >
+                                    <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                                        <Check className="w-10 h-10 text-emerald-500" />
                                     </div>
-                                    <div>
-                                        <div className="font-bold text-white truncate">{post.userName}</div>
-                                        <div className="text-xs text-gray-400">{new Date(post.createdDate).toLocaleDateString()}</div>
-                                    </div>
-                                    <span className="inline-block px-2 py-1 text-xs bg-white/10 rounded text-gray-300">
-                                        {post.topicName}
-                                    </span>
-                                </div>
-
-                                {/* Content */}
-                                <div className="flex-1">
-                                    <p className="text-gray-200 text-lg leading-relaxed mb-4">{post.content}</p>
-                                    {(post.imageUrl || post.video) && (
-                                        <div className="h-64 rounded-lg overflow-hidden bg-black/20">
-                                            {post.contentType === 5 ? (
-                                                <iframe
-                                                    src={(() => {
-                                                        const url = post.video?.publicUrl || post.imageUrl || '';
-                                                        if (url.includes('youtube.com/watch?v=')) return `https://www.youtube.com/embed/${url.split('v=')[1]?.split('&')[0]}`;
-                                                        if (url.includes('youtu.be/')) return `https://www.youtube.com/embed/${url.split('youtu.be/')[1]}`;
-                                                        return url;
-                                                    })()}
-                                                    className="w-full h-full"
-                                                    title="Post Video"
-                                                    frameBorder="0"
-                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                    allowFullScreen
-                                                />
-                                            ) : (
-                                                <img src={post.imageUrl} alt="" className="w-full h-full object-cover" />
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Actions */}
-                                <div className="shrink-0 flex flex-col justify-center gap-3 border-l border-white/5 pl-6">
-                                    <button
-                                        onClick={() => handleApprove(post.id)}
+                                    <h3 className="text-2xl font-bold text-white mb-2">Her şey yolunda!</h3>
+                                    <p className="text-gray-400 text-lg">Onay bekleyen yeni gönderi bulunmuyor.</p>
+                                </motion.div>
+                            ) : (
+                                posts.map(post => (
+                                    <AdminApprovalCard
+                                        key={post.id}
+                                        post={post}
+                                        onApprove={handleApprove}
+                                        onReject={initReject}
+                                        onViewDetail={(id) => navigate(`/app/posts/${id}`)}
                                         disabled={processingId === post.id}
-                                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-black font-bold rounded-lg hover:bg-emerald-400 disabled:opacity-50 transition-colors w-full justify-center"
-                                    >
-                                        <Check size={18} />
-                                        Onayla
-                                    </button>
-                                    <button
-                                        onClick={() => handleReject(post.id)}
-                                        disabled={processingId === post.id}
-                                        className="flex items-center gap-2 px-4 py-2 bg-red-500/20 text-red-500 font-bold rounded-lg hover:bg-red-500/30 disabled:opacity-50 transition-colors w-full justify-center"
-                                    >
-                                        <X size={18} />
-                                        Reddet
-                                    </button>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            )}
+                                    />
+                                ))
+                            )}
+                        </AnimatePresence>
+                    </div>
+                )}
+            </div>
+
+            {/* Rejection Modal */}
+            <RejectionModal
+                isOpen={!!rejectionModalPostId}
+                onClose={() => !processingId && setRejectionModalPostId(null)}
+                onConfirm={handleConfirmReject}
+                isProcessing={processingId === rejectionModalPostId}
+            />
         </div>
     )
 }

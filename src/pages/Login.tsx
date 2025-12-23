@@ -31,7 +31,8 @@ const Login = () => {
                 firstName: response.firstName,
                 lastName: response.lastName,
                 userName: response.userName,
-                fieldType: response.fieldType?.toString() || 'Sayısal'
+                fieldType: response.fieldType?.toString() || 'Sayısal',
+                profilePictureUrl: response.profilePictureUrl
             }
             login(user, response.token, response.refreshToken)
             navigate('/app/dashboard')

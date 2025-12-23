@@ -140,6 +140,15 @@ export interface PostDto {
     id: number
     userId: number
     userName: string
+    displayName?: string
+    userBadgeIcon?: string
+// ...
+export interface CommentDto {
+    id: number
+    postId: number
+    userId: number
+    userName: string
+    displayName?: string
     userBadgeIcon?: string
     userRole?: string
     topicId: number
@@ -155,6 +164,7 @@ export interface PostDto {
     isLikedByMe: boolean
     isApproved: boolean
     rejectionReason?: string
+    profilePictureUrl?: string
 }
 
 export interface CreatePostDto {
@@ -174,6 +184,8 @@ export interface CommentDto {
     createdDate: string
     parentId?: number
     replies?: CommentDto[]
+    profilePictureUrl?: string
+    isDeleted?: boolean
 }
 
 export interface CreateCommentDto {
@@ -217,294 +229,60 @@ export interface GamificationProfileDto {
     totalPoints: number
 }
 
-// Friendship Types
+export interface ProfileStats {
+    totalCompletedTasks: number
+    totalPoints: number
+    globalRank: number
+}
+
+// ... (skipping to end)
+
+export interface PublicUserProfileDto {
+    id: number
+    userName: string
+    firstName: string
+    lastName: string
+    profilePictureUrl?: string
+    fieldType?: string
+    joinDate: string
+    streak?: {
+        currentStreak: number
+        maxStreak: number
+        lastActivityDate: string
+    }
+    stats?: {
+        totalCompletedTasks: number
+        totalPoints: number
+        globalRank: number
+    }
+    // Follow Stats
+    isFollowing: boolean
+    followersCount: number
+    followingCount: number
+    // 0: None, 1: Pending, 2: Accepted, 3: Rejected
+    friendshipStatus: number
+
+    badges: BadgeDto[]
+}
+
+// Messaging Types
 export interface FriendDto {
     friendshipId: number
     friendId: number
     firstName: string
     lastName: string
-    userName: string
-    level: number
-    isOnline: boolean
-    friendCode: string
+    profilePictureUrl?: string
     lastMessage?: string
     lastMessageDate?: string
-}
-
-export interface FriendRequestDto {
-    friendshipId: number
-    requesterId: number
-    requesterName: string
-    sentDate: string
+    isOnline: boolean
 }
 
 export interface MessageDto {
     id: number
     senderId: number
     receiverId: number
-    content: string;
-    sentAt: string;
-    isRead: boolean;
-}
-
-// Notification Types
-export interface NotificationDto {
-    id: number
-    title: string
-    message: string;
-    notificationType: string; // Reminder, System, etc.
-    reminderDate?: string;
-    isSent: boolean;
-    isActive: boolean;
-    createdDate: string;
-}
-
-export interface CreateNotificationDto {
-    title: string
-    message: string
-    reminderDate: string
-    notificationType: number
-}
-
-export interface NotificationMessageDto {
-    id: number
-    title: string
-    message: string
+    content: string
+    sentAt: string
     isRead: boolean
-    createdDate: string
-    relatedEntityId?: number
-    relatedEntityType?: string
 }
-
-// Study Resource Types
-export interface StudyResourceDto {
-    id: number
-    name: string
-    resourceType: string // Book, QuestionBank, Video, etc. from backend enum to string
-    topicId?: number
-    topicName?: string
-    linkOrInfo?: string
-    totalQuestions?: number
-    solvedQuestions?: number
-    isCompleted: boolean
-    createdDate: string
-}
-
-export interface CreateStudyResourceDto {
-    Name: string
-    ResourceType: number
-    LinkOrInfo?: string
-    TopicId?: number
-    TotalQuestions?: number
-    SolvedQuestionCount?: number
-}
-
-// Optional: You might want to update UpdateStudyResourceDto too if used
-export interface UpdateStudyResourceDto {
-    Id: number
-    Name: string
-    ResourceType: number
-    LinkOrInfo?: string
-    TopicId?: number
-    SolvedQuestionCount?: number
-    TotalQuestions?: number
-    Notes?: string
-}
-
-// Video Types
-export interface VideoDto {
-    id: number
-    title: string
-    fileName: string
-    url: string
-    duration: number
-    thumbnailUrl?: string
-    fileSizeBytes: number
-    contentType: string
-    uploadDate: string
-    isProcessed: boolean
-}
-
-export interface GenerateUploadUrlRequest {
-    fileName: string
-    contentType: string
-    fileSizeBytes: number
-}
-
-// Analytics Types
-export interface HeatmapData {
-    date: string
-    totalSeconds: number
-}
-
-export interface TimeWastedData {
-    lessonName: string
-    topicName: string
-    wastedMinutes: number
-    reason?: string
-}
-
-export interface StudyTimeChartData {
-    date: string
-    totalSeconds: number
-    pomodoroSeconds: number
-    normalSeconds: number
-}
-
-export interface ComprehensiveAnalysisDto {
-    totalStudyTime: number
-    dailyAverage: number
-    mostProductiveDay: string
-    mostStudiedSubject: string
-    heatmap: HeatmapData[]
-    weeklyChart: StudyTimeChartData[]
-    recentActivities: StudyActivityDto[]
-}
-
-export interface StudyActivityDto {
-    id: number
-    title: string
-    description: string
-    date: string
-    duration: string
-    color: string
-}
-
-// Export & Undo Types
-export interface UndoDto {
-    undoHistoryId: number
-    entityType: string
-    entityName: string;
-    deletedAt: string;
-    remainingSeconds: number;
-}
-
-// Announcement Types
-export interface AnnouncementDto {
-    id: number
-    title: string
-    content: string
-    createdDate: string
-    isEmergency: boolean
-}
-
-export interface CreateAnnouncementDto {
-    title: string
-    content: string
-    isEmergency: boolean
-    targetGrade?: number
-}
-
-// Category Types
-export interface CategoryDto {
-    id: number
-    name: string
-    description: string
-    parentId?: number
-    subCategories?: CategoryDto[]
-}
-
-// Auth Types
-export interface LoginRequest {
-    email: string
-    password: string
-}
-
-export interface RegisterRequest {
-    email: string
-    password: string
-    firstName: string
-    lastName: string
-    fieldType: number
-}
-
-export interface AuthResponse {
-    success: boolean
-    message: string
-    token: string
-    refreshToken: string
-    tokenExpiresAt: string
-    userId: number
-    email: string
-    firstName: string
-    lastName: string
-    userName: string
-    fieldType: number | null
-    friendCode: string
-    roles: string[]
-}
-
-export interface UserDto {
-    id: number
-    email: string
-    firstName: string
-    lastName: string
-    userName: string
-    fieldType: string
-}
-
-export interface UpdateProfileRequest {
-    firstName: string
-    lastName: string
-    userName: string
-}
-
-export interface ChangePasswordRequest {
-    currentPassword: string
-    newPassword: string
-    confirmNewPassword: string
-}
-
-// Dashboard Types
-export interface DashboardStudyTimeSummary {
-    todayMinutes: number
-    thisWeekMinutes: number
-    thisMonthMinutes: number
-    totalMinutes: number
-    pomodoroCount: number
-    normalSessionCount: number
-}
-
-export interface DashboardMockExamSummary {
-    totalExams: number
-    tytCount: number
-    aytCount: number
-    averageNet?: number
-    lastExamNet?: number
-    lastExamDate?: string
-}
-
-export interface DashboardTopicProgressSummary {
-    totalTopics: number
-    completedTopics: number
-    remainingTopics: number
-    completionPercentage: number
-    tytCompleted: number
-    tytRemaining: number
-    aytCompleted: number
-    aytRemaining: number
-}
-
-export interface DailyGoals {
-    plannedStudyMinutes: number
-    actualStudyMinutes: number
-    plannedTopicsCount: number
-    completedTopicsCount: number
-    hasActivePlan: boolean
-}
-
-export interface Activity {
-    type: string
-    description: string
-    date: string
-}
-
-export interface DashboardSummary {
-    studyTime: DashboardStudyTimeSummary
-    mockExam: DashboardMockExamSummary
-    topicProgress: DashboardTopicProgressSummary
-    dailyGoals: DailyGoals
-    recentActivities: Activity[]
-}
-
 

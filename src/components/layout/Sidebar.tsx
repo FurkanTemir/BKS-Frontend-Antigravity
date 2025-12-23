@@ -5,6 +5,7 @@ import { useAuthStore } from '../../stores/authStore'
 const Sidebar = () => {
     const navigate = useNavigate()
     const logout = useAuthStore((state) => state.logout)
+    const user = useAuthStore((state) => state.user)
 
     const navItems = [
         { icon: Home, label: 'Dashboard', path: '/app/dashboard' },
@@ -51,7 +52,15 @@ const Sidebar = () => {
                             }`
                         }
                     >
-                        <item.icon size={20} />
+                        {item.label === 'Profil' && user?.profilePictureUrl ? (
+                            <img
+                                src={user.profilePictureUrl}
+                                alt="Profile"
+                                className="w-7 h-7 rounded-full object-cover border border-neon-cyan/50"
+                            />
+                        ) : (
+                            <item.icon size={20} />
+                        )}
                         <span className="absolute left-16 px-3 py-2 bg-dark-200 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity glass z-50">
                             {item.label}
                         </span>

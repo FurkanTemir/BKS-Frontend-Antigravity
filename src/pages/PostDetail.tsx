@@ -109,6 +109,42 @@ const PostDetail = () => {
         }
     }
 
+    const handleDeleteComment = async (commentId: number) => {
+        if (!post) return
+
+        // 1. Optimistic Update
+        const previousComments = [...comments]
+
+        const markAsDeleted = (nodes: CommentDto[]): CommentDto[] => {
+            return nodes.map(node => {
+                if (node.id === commentId) {
+                    return { ...node, isDeleted: true } // Content handled by Render logic (isDeleted check)
+                }
+                if (node.replies) {
+                    return { ...node, replies: markAsDeleted(node.replies) }
+                }
+                return node
+            })
+        }
+
+        setComments(prev => markAsDeleted(prev))
+
+        try {
+            await postService.deleteComment(commentId)
+
+            // 2. Background Sync (Optional but good for consistency)
+            const commentsData = await postService.getComments(post.id)
+            setComments(buildCommentTree(commentsData))
+
+            setPost(prev => prev ? ({ ...prev, commentCount: Math.max(0, (prev.commentCount || 0) - 1) }) : null)
+        } catch (err) {
+            console.error('Failed to delete comment:', err)
+            // 3. Rollback on Error
+            setComments(previousComments)
+            alert('Yorum silinirken bir hata oluştu.')
+        }
+    }
+
     if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-neon-blue w-8 h-8" /></div>
     if (!post) return <div className="p-8 text-center text-gray-500">Gönderi bulunamadı.</div>
 
@@ -154,6 +190,7 @@ const PostDetail = () => {
                                 onCancelReply={() => setActiveReplyId(undefined)}
                                 onSubmitReply={handleSubmitComment}
                                 onLike={() => { }}
+                                onDelete={handleDeleteComment}
                             />
                         ))}
                         {comments.length === 0 && (

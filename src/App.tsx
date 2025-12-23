@@ -8,6 +8,7 @@ import Notes from './pages/Notes'
 import NoteDetail from './pages/NoteDetail'
 import Community from './pages/Community'
 import Profile from './pages/Profile'
+import PublicProfile from './pages/PublicProfile'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Analytics from './pages/Analytics'
@@ -54,13 +55,14 @@ function App() {
                     <Route path="/notes/:id" element={<NoteDetail />} />
                     <Route path="/community" element={<Community />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/u/:username" element={<PublicProfile />} />
 
-                    {/* New Features */}
                     {/* New Features */}
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/friends" element={<Friends />} />
-                    <Route path="/messages" element={<Messages />} />
                     <Route path="/notifications" element={<Notifications />} />
+                    <Route path="/messages" element={<Messages />} />
+                    <Route path="/messages/:userId" element={<Messages />} />
 
                     {/* Social & Posts */}
                     <Route path="/posts" element={<Posts />} />
@@ -70,9 +72,6 @@ function App() {
 
                     <Route path="/study-resources" element={<StudyResources />} />
                     <Route path="/study-resources/:id" element={<StudyResourceDetail />} />
-
-                    {/* Admin Routes */}
-                    <Route path="/admin/announcements" element={<AdminAnnouncements />} />
 
                     {/* Admin Routes */}
                     <Route path="/admin/announcements" element={<AdminAnnouncements />} />

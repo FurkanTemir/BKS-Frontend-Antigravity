@@ -42,4 +42,18 @@ export const authService = {
         const response = await api.post('/Auth/logout')
         return response.data
     },
+
+    uploadProfilePicture: async (file: File) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        const response = await api.post('/Auth/upload-profile-picture', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        })
+        return response.data
+    },
+
+    deleteAccount: async (password: string) => {
+        const response = await api.post('/Auth/delete-account', { password })
+        return response.data
+    },
 }

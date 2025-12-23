@@ -8,6 +8,7 @@ interface User {
     lastName: string
     userName: string
     fieldType: string
+    profilePictureUrl?: string
 }
 
 interface AuthState {

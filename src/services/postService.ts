@@ -93,5 +93,13 @@ export const postService = {
     getComments: async (postId: number): Promise<CommentDto[]> => {
         const response = await api.get<CommentDto[]>(`/Post/${postId}/comments`)
         return response.data
+    },
+
+    deletePost: async (id: number): Promise<void> => {
+        await api.delete(`/Post/${id}`)
+    },
+
+    deleteComment: async (id: number): Promise<void> => {
+        await api.delete(`/Post/comments/${id}`)
     }
 }

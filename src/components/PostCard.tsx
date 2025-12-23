@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Heart, MessageSquare, Share2, Play } from 'lucide-react'
 import type { PostDto } from '../types'
 
@@ -88,22 +89,32 @@ const PostCard = ({
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                    <div className={`rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center text-white font-bold shrink-0 ${isDetailView ? 'w-12 h-12 text-lg' : 'w-10 h-10'}`}>
-                        {post.userName.charAt(0)}
-                    </div>
-                    <div>
-                        <h3 className={`font-semibold text-gray-100 transition-colors line-clamp-1 ${isDetailView ? 'text-xl' : 'group-hover:text-neon-cyan'}`}>
-                            {post.userName}
-                        </h3>
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                            <span>{new Date(post.createdDate).toLocaleDateString(undefined, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</span>
-                            {post.userRole && (
-                                <span className="px-1.5 py-0.5 rounded bg-white/5 text-gray-300 text-[10px]">
-                                    {post.userRole}
-                                </span>
+                    <Link
+                        to={`/app/u/${post.userName}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center gap-3 group/user"
+                    >
+                        <div className={`rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center text-white font-bold shrink-0 overflow-hidden border border-white/10 ${isDetailView ? 'w-12 h-12 text-lg' : 'w-10 h-10'}`}>
+                            {post.profilePictureUrl ? (
+                                <img src={post.profilePictureUrl} alt={post.userName} className="w-full h-full object-cover" />
+                            ) : (
+                                post.userName.charAt(0).toUpperCase()
                             )}
                         </div>
-                    </div>
+                        <div>
+                            <h3 className={`font-semibold text-gray-100 transition-colors line-clamp-1 ${isDetailView ? 'text-xl' : 'group-hover/user:text-neon-cyan'}`}>
+                                {post.displayName || post.userName}
+                            </h3>
+                            <div className="flex items-center gap-2 text-xs text-gray-400">
+                                <span>{new Date(post.createdDate).toLocaleDateString(undefined, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</span>
+                                {post.userRole && (
+                                    <span className="px-1.5 py-0.5 rounded bg-white/5 text-gray-300 text-[10px]">
+                                        {post.userRole}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </Link>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-xs font-medium border-0 ${getTopicStyle(post.topicName)}`}>
                     {post.topicName}

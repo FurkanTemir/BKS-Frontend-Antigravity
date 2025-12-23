@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useParams } from 'react-router-dom'
 import { friendshipService } from '../services/friendshipService'
 import { messageService } from '../services/messageService'
 import type { FriendDto, MessageDto } from '../types'
@@ -7,7 +7,8 @@ import { Send, Search, MessageCircle } from 'lucide-react'
 
 export default function Messages() {
     const [searchParams] = useSearchParams()
-    const preselectedUserId = searchParams.get('userId')
+    const { userId: routeUserId } = useParams<{ userId: string }>()
+    const preselectedUserId = routeUserId || searchParams.get('userId')
 
     const [friends, setFriends] = useState<FriendDto[]>([])
     const [selectedFriend, setSelectedFriend] = useState<FriendDto | null>(null)
